@@ -22,7 +22,7 @@ export interface SearchCategory {
   results: StreamResult[];
 }
 
-const TMDB_KEY = 'aee5d1d09b9a81d5e9bcba0b7a6d2ab3';
+const TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY || '7335700b6aa01326857f558c0eea39b8';
 
 export async function getImdbId(type: 'movie' | 'tv', tmdbId: number): Promise<string | null> {
   try {
