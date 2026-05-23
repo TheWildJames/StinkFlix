@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Film, Tv, Home, Bookmark, ChevronDown, Zap } from 'lucide-react';
+import { Search, Film, Home, Bookmark, ChevronDown } from 'lucide-react';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -47,9 +47,6 @@ export default function Navbar() {
         {/* Nav Links */}
         <div className="hidden md:flex items-center gap-1">
           <NavLink to="/" icon={<Home size={15} />} label="Home" />
-          <NavLink to="/movies" icon={<Film size={15} />} label="Movies" />
-          <NavLink to="/tv" icon={<Tv size={15} />} label="TV Shows" />
-          <NavLink to="/streams" icon={<Zap size={15} />} label="Stream Finder" />
           <NavLink to="/watchlist" icon={<Bookmark size={15} />} label="Watchlist" />
         </div>
 
@@ -119,9 +116,6 @@ function MobileMenu() {
       {open && (
         <div className="absolute top-full right-0 mt-2 w-44 bg-[#12121a]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-xl overflow-hidden">
           <MobileNavLink to="/" icon={<Home size={15} />} label="Home" />
-          <MobileNavLink to="/movies" icon={<Film size={15} />} label="Movies" />
-          <MobileNavLink to="/tv" icon={<Tv size={15} />} label="TV Shows" />
-          <MobileNavLink to="/streams" icon={<Zap size={15} />} label="Stream Finder" />
           <MobileNavLink to="/watchlist" icon={<Bookmark size={15} />} label="Watchlist" />
         </div>
       )}
