@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import SearchPage from './pages/Search';
@@ -9,7 +9,7 @@ import Watchlist from './pages/Watchlist';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="min-h-screen bg-[#0a0a0f] text-white">
         <Routes>
           {/* Watch page has its own minimal layout */}
@@ -22,7 +22,6 @@ export default function App() {
               <>
                 <Navbar />
                 <Routes>
-                  <Route path="/" element={<Home />} />
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/movies" element={<Browse type="movie" />} />
                   <Route path="/tv" element={<Browse type="tv" />} />
@@ -35,6 +34,6 @@ export default function App() {
           />
         </Routes>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
