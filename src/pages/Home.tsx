@@ -47,12 +47,17 @@ export default function Home() {
     // Check streak
     const now = Date.now();
     const yesterday = now - 86400000;
-    if (lastVisit > yesterday) {
-      setStreak(prev => prev + 1);
-      if (prev === 6) {
-        unlockAchievement('streak_starter');
-        addToast('🔥 7-day streak achieved!', 'success');
-      }
+    if (lastVisit > yesterday && lastVisit > 0) {
+      setStreak(prev => {
+        const newStreak = prev + 1;
+        if (newStreak === 7) {
+          setTimeout(() => {
+            unlockAchievement('streak_starter');
+            addToast('🔥 7-day streak achieved!', 'success');
+          }, 100);
+        }
+        return newStreak;
+      });
     } else if (lastVisit < now - 172800000) {
       setStreak(1);
     }
