@@ -66,7 +66,7 @@ export default function Home() {
       }
     } catch {}
 
-    Promise.all([
+    Promise.allSettled([
       getTrending('all', 'week'),
       getPopular('movie'),
       getPopular('tv'),
@@ -75,14 +75,14 @@ export default function Home() {
       getNowPlaying(),
       getAiringToday(),
     ]).then(([t, pm, ptv, trm, trtv, np, at]) => {
-      setTrending(t.results ?? []);
-      setPopularMovies(pm.results ?? []);
-      setPopularTV(ptv.results ?? []);
-      setTopRatedMovies(trm.results ?? []);
-      setTopRatedTV(trtv.results ?? []);
-      setNowPlaying(np.results ?? []);
-      setAiringToday(at.results ?? []);
-    }).finally(() => setLoading(false));
+      setTrending((t as PromiseFulfilledResult<any>).value?.results ?? []);
+      setPopularMovies((pm as PromiseFulfilledResult<any>).value?.results ?? []);
+      setPopularTV((ptv as PromiseFulfilledResult<any>).value?.results ?? []);
+      setTopRatedMovies((trm as PromiseFulfilledResult<any>).value?.results ?? []);
+      setTopRatedTV((trtv as PromiseFulfilledResult<any>).value?.results ?? []);
+      setNowPlaying((np as PromiseFulfilledResult<any>).value?.results ?? []);
+      setAiringToday((at as PromiseFulfilledResult<any>).value?.results ?? []);
+    }).finally(() => setLoading(false)).catch(() => setLoading(false));
   }, []);
 
   const handleSearch = useCallback((e: React.FormEvent) => {

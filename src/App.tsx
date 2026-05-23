@@ -1,4 +1,5 @@
 import { HashRouter, Routes, Route } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './contexts/ToastContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { HistoryProvider } from './contexts/HistoryContext';
@@ -21,14 +22,15 @@ import KeyboardShortcuts from './components/KeyboardShortcuts';
 
 export default function App() {
   return (
-    <ToastProvider>
-      <SettingsProvider>
-        <HistoryProvider>
-          <AchievementsProvider>
-            <HashRouter>
-              <div className="min-h-screen bg-[#0a0a0f] text-white">
-                <KeyboardShortcuts />
-                <Disclaimer />
+    <ErrorBoundary>
+      <ToastProvider>
+        <SettingsProvider>
+          <HistoryProvider>
+            <AchievementsProvider>
+              <HashRouter>
+                <div className="min-h-screen bg-[#0a0a0f] text-white">
+                  <KeyboardShortcuts />
+                  <Disclaimer />
                 <Routes>
                   {/* Watch page has its own minimal layout */}
                   <Route path="/watch/:type/:id/:season?/:episode?" element={<WatchPage />} />
@@ -64,5 +66,6 @@ export default function App() {
         </HistoryProvider>
       </SettingsProvider>
     </ToastProvider>
+    </ErrorBoundary>
   );
 }
