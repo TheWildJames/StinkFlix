@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
-import { Star, Play, Bookmark, BookmarkCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Star, Play, Bookmark, BookmarkCheck, Zap } from 'lucide-react';
 import { img } from '../lib/tmdb';
 import type { MediaItem } from '../lib/tmdb';
 import { useLocalStorage } from '../lib/hooks';
@@ -10,6 +10,7 @@ interface Props {
 }
 
 export default function MediaCard({ item, mediaType }: Props) {
+  const navigate = useNavigate();
   const type = mediaType ?? item.media_type ?? 'movie';
   const title = item.title ?? item.name ?? '';
   const year = (item.release_date ?? item.first_air_date ?? '').slice(0, 4);
@@ -29,6 +30,12 @@ export default function MediaCard({ item, mediaType }: Props) {
       `watchlist-item-${item.id}`,
       JSON.stringify({ ...item, media_type: type })
     );
+  };
+
+  const findStreams = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/streams?q=${encodeURIComponent(title)}`);
   };
 
   return (
@@ -56,6 +63,13 @@ export default function MediaCard({ item, mediaType }: Props) {
           <div className="w-12 h-12 rounded-full bg-emerald-500/90 backdrop-blur flex items-center justify-center shadow-lg shadow-emerald-500/30 transform scale-75 group-hover:scale-100 transition-transform duration-300">
             <Play size={20} className="text-white ml-0.5" fill="white" />
           </div>
+          <button
+            onClick={findStreams}
+            className="px-3 py-1.5 bg-blue-500/90 hover:bg-blue-400 text-white text-xs font-medium rounded-lg backdrop-blur flex items-center gap-1 transform scale-75 group-hover:scale-100 transition-transform duration-300"
+          >
+            <Zap size={12} />
+            Find Streams
+          </button>
         </div>
 
         {/* Watchlist button */}

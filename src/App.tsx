@@ -7,11 +7,16 @@ import MediaDetailPage from './pages/MediaDetail';
 import WatchPage from './pages/Watch';
 import Browse from './pages/Browse';
 import Watchlist from './pages/Watchlist';
+import NotFound from './pages/NotFound';
+import Disclaimer from './components/Disclaimer';
+import KeyboardShortcuts from './components/KeyboardShortcuts';
 
 export default function App() {
   return (
     <HashRouter>
       <div className="min-h-screen bg-[#0a0a0f] text-white">
+        <KeyboardShortcuts />
+        <Disclaimer />
         <Routes>
           {/* Watch page has its own minimal layout */}
           <Route path="/watch/:type/:id/:season?/:episode?" element={<WatchPage />} />
@@ -30,6 +35,8 @@ export default function App() {
                   <Route path="/movie/:id" element={<MediaDetailPage type="movie" />} />
                   <Route path="/tv/:id" element={<MediaDetailPage type="tv" />} />
                   <Route path="/watchlist" element={<Watchlist />} />
+                  <Route path="/" element={<Home />} />
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </>
             }

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { SlidersHorizontal, ChevronDown, Search, Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import MediaCard from '../components/MediaCard';
 import Spinner from '../components/Spinner';
 import { getPopular, getTopRated, discoverMedia, getGenres } from '../lib/tmdb';
@@ -15,6 +16,7 @@ const SORT_LABELS: Record<SortOption, string> = {
 };
 
 export default function Browse({ type }: { type: 'movie' | 'tv' }) {
+  const navigate = useNavigate();
   const [items, setItems] = useState<MediaItem[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -24,6 +26,7 @@ export default function Browse({ type }: { type: 'movie' | 'tv' }) {
   const [genres, setGenres] = useState<{ id: number; name: string }[]>([]);
   const [selectedGenre, setSelectedGenre] = useState<number | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     getGenres(type).then(d => setGenres(d.genres ?? []));
@@ -56,11 +59,18 @@ export default function Browse({ type }: { type: 'movie' | 'tv' }) {
     }).finally(() => setLoadingMore(false));
   };
 
+  const handleSearch = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/streams?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  }, [searchQuery, navigate]);
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] pt-20">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-white">
               {type === 'movie' ? 'Movies' : 'TV Shows'}
@@ -69,17 +79,31 @@ export default function Browse({ type }: { type: 'movie' | 'tv' }) {
               Discover {type === 'movie' ? 'films' : 'series'} to watch
             </p>
           </div>
-          <button
-            onClick={() => setShowFilters(s => !s)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all border ${
-              showFilters
-                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                : 'bg-white/8 text-white/60 hover:bg-white/15 hover:text-white border-white/10'
-            }`}
-          >
-            <SlidersHorizontal size={15} />
-            Filters
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <form onSubmit={handleSearch} className="flex-1 sm:flex-none sm:w-64">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={14} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Find streams..."
+                  className="w-full bg-white/8 border border-white/10 text-white placeholder-white/30 rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-emerald-400/50 transition-all"
+                />
+              </div>
+            </form>
+            <button
+              onClick={() => setShowFilters(s => !s)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all border whitespace-nowrap ${
+                showFilters
+                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                  : 'bg-white/8 text-white/60 hover:bg-white/15 hover:text-white border-white/10'
+              }`}
+            >
+              <SlidersHorizontal size={15} />
+              <span className="hidden sm:inline">Filters</span>
+            </button>
+          </div>
         </div>
 
         {/* Filters panel */}

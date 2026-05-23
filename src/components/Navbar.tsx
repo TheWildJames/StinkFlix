@@ -64,7 +64,7 @@ export default function Navbar() {
                 onChange={e => setQuery(e.target.value)}
                 onBlur={() => { if (!query) setShowSearch(false); }}
                 placeholder="Search movies, shows..."
-                className="bg-white/10 backdrop-blur border border-white/20 text-white placeholder-white/40 rounded-full px-4 py-1.5 text-sm w-52 sm:w-72 focus:outline-none focus:border-emerald-400/60 focus:bg-white/15 transition-all"
+                className="bg-white/10 backdrop-blur border border-white/20 text-white placeholder-white/50 rounded-full px-4 py-1.5 text-sm w-52 sm:w-72 focus:outline-none focus:border-emerald-400/60 focus:bg-white/15 transition-all"
               />
             </form>
           ) : (

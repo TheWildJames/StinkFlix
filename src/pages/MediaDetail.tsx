@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Play, Star, Clock, Calendar, Globe, Bookmark, BookmarkCheck, ChevronRight, Tv, Film } from 'lucide-react';
+import { Play, Star, Clock, Calendar, Globe, Bookmark, BookmarkCheck, ChevronRight, Tv, Film, Zap } from 'lucide-react';
 import { getDetail, getCredits, getVideos, getSimilar, img, imgOriginal } from '../lib/tmdb';
 import type { MediaDetail, CastMember } from '../lib/tmdb';
 import { PageSpinner } from '../components/Spinner';
@@ -151,6 +151,14 @@ export default function MediaDetailPage({ type }: { type: 'movie' | 'tv' }) {
                 >
                   <Play size={18} fill="white" />
                   Watch Now
+                </button>
+
+                <button
+                  onClick={() => navigate(`/streams?q=${encodeURIComponent(title)}`)}
+                  className="flex items-center gap-2 px-5 py-3 bg-blue-500/80 hover:bg-blue-400 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-105 active:scale-95"
+                >
+                  <Zap size={18} />
+                  Find Streams
                 </button>
 
                 {trailer && (

@@ -33,7 +33,6 @@ export default function SearchPage() {
       setResults(filtered);
       setTotalPages(data.total_pages ?? 1);
     }).finally(() => setLoading(false));
-    setSearchParams({ q: debounced }, { replace: true });
   }, [debounced]);
 
   const loadMore = () => {
