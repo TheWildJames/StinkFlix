@@ -11,6 +11,9 @@ import MediaDetailPage from './pages/MediaDetail';
 import WatchPage from './pages/Watch';
 import Browse from './pages/Browse';
 import Watchlist from './pages/Watchlist';
+import Explore from './pages/Explore';
+import Top10 from './pages/Top10';
+import Achievements from './pages/Achievements';
 import NotFound from './pages/NotFound';
 import Disclaimer from './components/Disclaimer';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
@@ -40,6 +43,9 @@ export default function App() {
                           <Route path="/streams" element={<StreamsPage />} />
                           <Route path="/movies" element={<Browse type="movie" />} />
                           <Route path="/tv" element={<Browse type="tv" />} />
+                          <Route path="/explore" element={<Explore />} />
+                          <Route path="/top10" element={<Top10 />} />
+                          <Route path="/achievements" element={<Achievements />} />
                           <Route path="/movie/:id" element={<MediaDetailPage type="movie" />} />
                           <Route path="/tv/:id" element={<MediaDetailPage type="tv" />} />
                           <Route path="/watchlist" element={<Watchlist />} />
