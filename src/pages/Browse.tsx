@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { SlidersHorizontal, ChevronDown, Search, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import MediaCard from '../components/MediaCard';
-import Spinner from '../components/Spinner';
+import { Spinner } from '../components/Spinner';
 import { getPopular, getTopRated, discoverMedia, getGenres } from '../lib/tmdb';
 import type { MediaItem } from '../lib/tmdb';
 

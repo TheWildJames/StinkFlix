@@ -81,6 +81,8 @@ export const getTopRated = (type: 'movie' | 'tv') =>
 
 export const getNowPlaying = () => apiFetch('/movie/now_playing');
 
+export const getOnTheAir = () => apiFetch('/tv/on_the_air');
+
 export const getAiringToday = () => apiFetch('/tv/airing_today');
 
 export const getDetail = (type: 'movie' | 'tv', id: number): Promise<MediaDetail> =>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import MediaCard from '../components/MediaCard';
-import Spinner from '../components/Spinner';
+import { Spinner } from '../components/Spinner';
 import { searchMulti } from '../lib/tmdb';
 import { useDebounce } from '../lib/hooks';
 import type { MediaItem } from '../lib/tmdb';
