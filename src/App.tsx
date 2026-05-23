@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import SearchPage from './pages/Search';
+import StreamsPage from './pages/Streams';
 import MediaDetailPage from './pages/MediaDetail';
 import WatchPage from './pages/Watch';
 import Browse from './pages/Browse';
@@ -23,6 +24,7 @@ export default function App() {
                 <Navbar />
                 <Routes>
                   <Route path="/search" element={<SearchPage />} />
+                  <Route path="/streams" element={<StreamsPage />} />
                   <Route path="/movies" element={<Browse type="movie" />} />
                   <Route path="/tv" element={<Browse type="tv" />} />
                   <Route path="/movie/:id" element={<MediaDetailPage type="movie" />} />
