@@ -14,6 +14,7 @@ import Watchlist from './pages/Watchlist';
 import Explore from './pages/Explore';
 import Top10 from './pages/Top10';
 import Achievements from './pages/Achievements';
+import CustomLists from './pages/CustomLists';
 import NotFound from './pages/NotFound';
 import Disclaimer from './components/Disclaimer';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
@@ -46,6 +47,7 @@ export default function App() {
                           <Route path="/explore" element={<Explore />} />
                           <Route path="/top10" element={<Top10 />} />
                           <Route path="/achievements" element={<Achievements />} />
+                          <Route path="/lists" element={<CustomLists />} />
                           <Route path="/movie/:id" element={<MediaDetailPage type="movie" />} />
                           <Route path="/tv/:id" element={<MediaDetailPage type="tv" />} />
                           <Route path="/watchlist" element={<Watchlist />} />

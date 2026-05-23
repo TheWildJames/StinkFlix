@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Film, Home, Bookmark, ChevronDown, Sparkles, TrendingUp, Medal } from 'lucide-react';
+import { Search, Film, Home, Bookmark, ChevronDown, Sparkles, TrendingUp, Medal, List } from 'lucide-react';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -49,6 +49,7 @@ export default function Navbar() {
           <NavLink to="/" icon={<Home size={15} />} label="Home" />
           <NavLink to="/explore" icon={<Sparkles size={15} />} label="Explore" />
           <NavLink to="/top10" icon={<TrendingUp size={15} />} label="Top 10" />
+          <NavLink to="/lists" icon={<List size={15} />} label="Lists" />
           <NavLink to="/achievements" icon={<Medal size={15} />} label="Achievements" />
           <NavLink to="/watchlist" icon={<Bookmark size={15} />} label="Watchlist" />
         </div>
@@ -117,10 +118,11 @@ function MobileMenu() {
         <ChevronDown size={18} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <div className="absolute top-full right-0 mt-2 w-52 bg-[#12121a]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-xl overflow-hidden">
+        <div className="absolute top-full right-0 mt-2 w-56 bg-[#12121a]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-xl overflow-hidden">
           <MobileNavLink to="/" icon={<Home size={15} />} label="Home" />
           <MobileNavLink to="/explore" icon={<Sparkles size={15} />} label="Explore" />
           <MobileNavLink to="/top10" icon={<TrendingUp size={15} />} label="Top 10" />
+          <MobileNavLink to="/lists" icon={<List size={15} />} label="Lists" />
           <MobileNavLink to="/achievements" icon={<Medal size={15} />} label="Achievements" />
           <MobileNavLink to="/watchlist" icon={<Bookmark size={15} />} label="Watchlist" />
         </div>
