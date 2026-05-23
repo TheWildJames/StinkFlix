@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Star, Play, Bookmark, BookmarkCheck, Zap } from 'lucide-react';
 import { img } from '../lib/tmdb';
 import type { MediaItem } from '../lib/tmdb';
