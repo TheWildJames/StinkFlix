@@ -95,28 +95,7 @@ export function generateDirectStreamLinks(imdbId: string, tmdbId: number, type: 
   return links;
 }
 
-export function generateAppLinks(imdbId: string, tmdbId: number, title: string, type: 'movie' | 'tv', season?: number, episode?: number): StreamLink[] {
-  const appLinks: StreamLink[] = [];
-  const encodedTitle = encodeURIComponent(title);
 
-  appLinks.push(
-    { name: 'Popcorn Time', url: `popcorn-time://${imdbId}`, type: 'app', category: 'P2P Streaming' },
-    { name: 'Stremio', url: `stremio://${imdbId ? `https://api.stremio.com/1/json/watchlist/items/${imdbId}` : ''}`, type: 'app', category: 'Add-on Streaming' },
-    { name: 'Kodi', url: `plugin://plugin.video.stremio/?action=play&id=${imdbId}`, type: 'app', category: 'Media Center' },
-    { name: 'VLC (Web)', url: `https://vlc.tv/play/${imdbId}.mp4`, type: 'app', category: 'Player' },
-    { name: 'IMDb', url: `https://www.imdb.com/title/${imdbId}/`, type: 'app', category: 'Info' },
-    { name: 'JustWatch (Where to Watch)', url: `https://www.justwatch.com/us/movies/${encodedTitle.toLowerCase().replace(/\s/g, '-')}`, type: 'app', category: 'Legal Streaming' },
-    { name: 'Rotten Tomatoes', url: `https://www.rottentomatoes.com/search?search=${encodedTitle}`, type: 'app', category: 'Reviews' },
-  );
-
-  if (type === 'tv' && season && episode) {
-    appLinks.push(
-      { name: 'TV Time (Episode)', url: `https://www.tvtime.com/series/${encodedTitle.toLowerCase().replace(/\s/g, '-')}/episodes/s${season}e${episode}`, type: 'app', category: 'Tracking' },
-    );
-  }
-
-  return appLinks;
-}
 
 export function generateAnimeSources(animeId: string, tmdbId: number, episodeNum?: number): StreamLink[] {
   const links: StreamLink[] = [];
@@ -130,8 +109,6 @@ export function generateAnimeSources(animeId: string, tmdbId: number, episodeNum
     { name: 'BiliAnime', url: `https://bilianime.tv/anime/${animeId}${episodeNum ? `/ep${episodeNum}` : ''}` },
     { name: 'AnimeKisa', url: `https://animekisa.pro/category/${animeId}${episodeNum ? `-episode-${episodeNum}` : ''}` },
     { name: 'AnimePahe', url: `https://animepahe.ru/watch/${animeId}${episodeNum ? `&q=0` : ''}` },
-    { name: 'MyAnimeList', url: `https://myanimelist.net/anime/${tmdbId}`, type: 'embed' as const, category: 'Info' as const },
-    { name: 'AniDB', url: `https://anidb.net/anime/${tmdbId}`, type: 'embed' as const, category: 'Info' as const },
   ];
 
   for (const src of embedSources) {
@@ -139,16 +116,6 @@ export function generateAnimeSources(animeId: string, tmdbId: number, episodeNum
   }
 
   return links;
-}
-
-export function generateAnimeAppLinks(title: string, malId?: number): StreamLink[] {
-  return [
-    { name: 'MyAnimeList', url: `https://myanimelist.net/anime/?q=${encodeURIComponent(title)}`, type: 'app', category: 'Info' },
-    { name: 'AniList', url: `https://anilist.co/search/anime?search=${encodeURIComponent(title)}`, type: 'app', category: 'Community' },
-    { name: 'Anime-Planet', url: `https://www.anime-planet.com/anime?q=${encodeURIComponent(title)}`, type: 'app', category: 'Discovery' },
-    { name: 'Crunchyroll', url: `https://www.crunchyroll.com/search?query=${encodeURIComponent(title)}`, type: 'app', category: 'Legal Streaming' },
-    { name: 'HIDIVE', url: `https://www.hidive.com/search?q=${encodeURIComponent(title)}`, type: 'app', category: 'Legal Streaming' },
-  ];
 }
 
 export async function searchStreams(query: string, categories: ('movie' | 'tv' | 'anime')[]): Promise<SearchCategory[]> {
@@ -176,7 +143,6 @@ export async function searchStreams(query: string, categories: ('movie' | 'tv' |
         movie.links = [
           ...generateMovieEmbedSources(imdbId || String(movie.tmdbId), movie.tmdbId),
           ...generateDirectStreamLinks(imdbId || String(movie.tmdbId), movie.tmdbId, 'movie'),
-          ...generateAppLinks(imdbId || String(movie.tmdbId), movie.tmdbId, movie.title, 'movie'),
         ];
       }
 
@@ -208,7 +174,6 @@ export async function searchStreams(query: string, categories: ('movie' | 'tv' |
         show.links = [
           ...generateTVEmbedSources(imdbId || String(show.tmdbId), show.tmdbId, 1, 1),
           ...generateDirectStreamLinks(imdbId || String(show.tmdbId), show.tmdbId, 'tv', 1, 1),
-          ...generateAppLinks(imdbId || String(show.tmdbId), show.tmdbId, show.title, 'tv', 1, 1),
         ];
       }
 
@@ -240,8 +205,6 @@ export async function searchStreams(query: string, categories: ('movie' | 'tv' |
         const slugId = anime.title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
         anime.links = [
           ...generateAnimeSources(slugId, anime.tmdbId, 1),
-          ...generateAppLinks(imdbId || String(anime.tmdbId), anime.tmdbId, anime.title, 'tv', 1, 1),
-          ...generateAnimeAppLinks(anime.title),
         ];
       }
 
@@ -270,7 +233,6 @@ export async function getStreamLinksForItem(
     links = [
       ...generateMovieEmbedSources(idParam, tmdbId),
       ...generateDirectStreamLinks(idParam, tmdbId, 'movie'),
-      ...generateAppLinks(idParam, tmdbId, title, 'movie'),
     ];
   } else {
     const s = season || 1;
@@ -278,7 +240,6 @@ export async function getStreamLinksForItem(
     links = [
       ...generateTVEmbedSources(idParam, tmdbId, s, e),
       ...generateDirectStreamLinks(idParam, tmdbId, 'tv', s, e),
-      ...generateAppLinks(idParam, tmdbId, title, 'tv', s, e),
     ];
   }
 
@@ -295,14 +256,22 @@ export async function getStreamLinksForItem(
 
 export function getStreamLinkCategories(links: StreamLink[]): Map<string, StreamLink[]> {
   const categories = new Map<string, StreamLink[]>();
+  const playableStreams: StreamLink[] = [];
+  const otherLinks: StreamLink[] = [];
 
   for (const link of links) {
-    let category = link.category || link.type;
-    const key = category.charAt(0).toUpperCase() + category.slice(1);
-    if (!categories.has(key)) {
-      categories.set(key, []);
+    if (link.type === 'embed') {
+      playableStreams.push(link);
+    } else {
+      otherLinks.push(link);
     }
-    categories.get(key)!.push(link);
+  }
+
+  if (playableStreams.length > 0) {
+    categories.set('Playable Streams', playableStreams);
+  }
+  if (otherLinks.length > 0) {
+    categories.set('Other Links', otherLinks);
   }
 
   return categories;
