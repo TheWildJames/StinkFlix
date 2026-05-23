@@ -9,9 +9,11 @@ interface Props {
   items: MediaItem[];
   mediaType?: 'movie' | 'tv';
   viewAllLink?: string;
+  isTop10?: boolean;
+  showProgress?: boolean;
 }
 
-export default function MediaRow({ title, items, mediaType, viewAllLink }: Props) {
+export default function MediaRow({ title, items, mediaType, viewAllLink, isTop10, showProgress }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: 'left' | 'right') => {
@@ -36,20 +38,22 @@ export default function MediaRow({ title, items, mediaType, viewAllLink }: Props
               View all <ArrowRight size={14} />
             </Link>
           )}
-          <div className="hidden sm:flex gap-1">
-            <button
-              onClick={() => scroll('left')}
-              className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <button
-              onClick={() => scroll('right')}
-              className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
+          {!isTop10 && (
+            <div className="hidden sm:flex gap-1">
+              <button
+                onClick={() => scroll('left')}
+                className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                onClick={() => scroll('right')}
+                className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -59,9 +63,14 @@ export default function MediaRow({ title, items, mediaType, viewAllLink }: Props
         className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {items.map(item => (
-          <div key={item.id} className="shrink-0 w-36 sm:w-44">
-            <MediaCard item={item} mediaType={mediaType} />
+        {items.map((item, index) => (
+          <div key={item.id} className={isTop10 ? 'shrink-0 w-32 sm:w-40' : showProgress ? 'shrink-0 w-36 sm:w-44' : undefined}>
+            <MediaCard
+              item={item}
+              mediaType={mediaType}
+              index={isTop10 ? index : undefined}
+              showProgress={showProgress}
+            />
           </div>
         ))}
       </div>

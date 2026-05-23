@@ -3,7 +3,6 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './contexts/ToastContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { HistoryProvider } from './contexts/HistoryContext';
-import { AchievementsProvider } from './contexts/AchievementsContext';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import SearchPage from './pages/Search';
@@ -12,10 +11,6 @@ import MediaDetailPage from './pages/MediaDetail';
 import WatchPage from './pages/Watch';
 import Browse from './pages/Browse';
 import Watchlist from './pages/Watchlist';
-import Explore from './pages/Explore';
-import Top10 from './pages/Top10';
-import Achievements from './pages/Achievements';
-import CustomLists from './pages/CustomLists';
 import NotFound from './pages/NotFound';
 import Disclaimer from './components/Disclaimer';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
@@ -26,11 +21,10 @@ export default function App() {
       <ToastProvider>
         <SettingsProvider>
           <HistoryProvider>
-            <AchievementsProvider>
-              <HashRouter>
-                <div className="min-h-screen bg-[#0a0a0f] text-white">
-                  <KeyboardShortcuts />
-                  <Disclaimer />
+            <HashRouter>
+              <div className="min-h-screen bg-[#0a0a0f] text-white">
+                <KeyboardShortcuts />
+                <Disclaimer />
                 <Routes>
                   {/* Watch page has its own minimal layout */}
                   <Route path="/watch/:type/:id/:season?/:episode?" element={<WatchPage />} />
@@ -46,10 +40,6 @@ export default function App() {
                           <Route path="/streams" element={<StreamsPage />} />
                           <Route path="/movies" element={<Browse type="movie" />} />
                           <Route path="/tv" element={<Browse type="tv" />} />
-                          <Route path="/explore" element={<Explore />} />
-                          <Route path="/top10" element={<Top10 />} />
-                          <Route path="/achievements" element={<Achievements />} />
-                          <Route path="/lists" element={<CustomLists />} />
                           <Route path="/movie/:id" element={<MediaDetailPage type="movie" />} />
                           <Route path="/tv/:id" element={<MediaDetailPage type="tv" />} />
                           <Route path="/watchlist" element={<Watchlist />} />
@@ -62,10 +52,9 @@ export default function App() {
                 </Routes>
               </div>
             </HashRouter>
-          </AchievementsProvider>
-        </HistoryProvider>
-      </SettingsProvider>
-    </ToastProvider>
+          </HistoryProvider>
+        </SettingsProvider>
+      </ToastProvider>
     </ErrorBoundary>
   );
 }

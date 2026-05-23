@@ -37,24 +37,37 @@ export async function getImdbId(type: 'movie' | 'tv', tmdbId: number): Promise<s
 }
 
 export function generateMovieEmbedSources(imdbId: string, tmdbId: number): StreamLink[] {
-  return [
-    { name: 'VidSrc Pro', url: `https://vidsrc.pro/embed/movie/${tmdbId}`, type: 'embed' },
-    { name: 'VidSrc', url: `https://vidsrc.to/embed/movie/${imdbId}`, type: 'embed' },
-    { name: 'VidSrc to', url: `https://vidsrc.cc/embed/movie/${imdbId}`, type: 'embed' },
+  const sources: StreamLink[] = [];
+
+  // Primary reliable embeds
+  sources.push(
     { name: '2Embed', url: `https://www.2embed.cc/embed/${imdbId}`, type: 'embed' },
-    { name: '2Embed Fast', url: `https://www.2embed.cc/stream/${imdbId}`, type: 'embed' },
+    { name: '2Embed (Fast)', url: `https://www.2embed.cc/stream/${imdbId}`, type: 'embed' },
     { name: 'SuperEmbed', url: `https://multiembed.mov/?video_id=${imdbId}&tmdb=1`, type: 'embed' },
-    { name: 'EmbedSu', url: `https://embed.su/embed/movie/${tmdbId}`, type: 'embed' },
-    { name: 'SmashyStream', url: `https://player.smashystream.com/movie/${tmdbId}`, type: 'embed' },
+  );
+
+  // VidSrc alternatives
+  if (tmdbId) {
+    sources.push(
+      { name: 'VidSrc.me', url: `https://vidsrc.me/embed/movie/${tmdbId}`, type: 'embed' },
+      { name: 'VidSrc.to', url: `https://vidsrc.to/embed/movie/${imdbId}`, type: 'embed' },
+    );
+  }
+
+  // Additional embeds
+  if (imdbId) {
+    sources.push(
+      { name: 'Embed.su', url: `https://embed.su/embed/movie/${imdbId}`, type: 'embed' },
+      { name: 'FlixGo', url: `https://flixgo.net/embed/${imdbId}`, type: 'embed' },
+    );
+  }
+
+  // Backup sources
+  sources.push(
     { name: 'AutoEmbed', url: `https://player.autoembed.cc/embed/movie/${tmdbId}`, type: 'embed' },
-    { name: 'NontonGo', url: `https://www.nontongo.net/embed/movie/${tmdbId}`, type: 'embed' },
-    { name: 'FlixGo', url: `https://flixgo.net/embed/${imdbId}`, type: 'embed' },
-    { name: 'EmbedR', url: `https://embed.su/movie/${imdbId}`, type: 'embed' },
-    { name: 'VOE', url: `https://voe.sx/embed/${imdbId}`, type: 'embed' },
-    { name: 'DoodStream', url: `https://dood.to/e/${imdbId}`, type: 'embed' },
-    { name: 'StreamTape', url: `https://streamtape.com/e/${imdbId}`, type: 'embed' },
-    { name: 'MegaCloud', url: `https://megacloud.tv/embed/${imdbId}`, type: 'embed' },
-  ];
+  );
+
+  return sources;
 }
 
 export function generateTVEmbedSources(imdbId: string, tmdbId: number, season: number, episode: number): StreamLink[] {

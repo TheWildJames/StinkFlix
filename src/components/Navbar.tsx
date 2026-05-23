@@ -1,13 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Film, Home, Bookmark, ChevronDown, Sparkles, TrendingUp, Medal, List } from 'lucide-react';
+import { Search, Film, Home, Bookmark, ChevronDown, Bell, User, Shuffle, Settings } from 'lucide-react';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [query, setQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [notifications] = useState(3);
+  const profileRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setShowProfile(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const surpriseMe = () => {
+    const randomId = Math.floor(Math.random() * 10000) + 1;
+    navigate(`/watch/movie/${randomId}`);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -23,7 +41,8 @@ export default function Navbar() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+      // Use hash to keep user on home page
+      window.location.hash = `/search?q=${encodeURIComponent(query.trim())}`;
     }
   };
 
@@ -47,10 +66,6 @@ export default function Navbar() {
         {/* Nav Links */}
         <div className="hidden md:flex items-center gap-1">
           <NavLink to="/" icon={<Home size={15} />} label="Home" />
-          <NavLink to="/explore" icon={<Sparkles size={15} />} label="Explore" />
-          <NavLink to="/top10" icon={<TrendingUp size={15} />} label="Top 10" />
-          <NavLink to="/lists" icon={<List size={15} />} label="Lists" />
-          <NavLink to="/achievements" icon={<Medal size={15} />} label="Achievements" />
           <NavLink to="/watchlist" icon={<Bookmark size={15} />} label="Watchlist" />
         </div>
 
@@ -69,13 +84,72 @@ export default function Navbar() {
               />
             </form>
           ) : (
-            <button
-              onClick={() => setShowSearch(true)}
-              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all"
-            >
-              <Search size={18} />
-            </button>
+            <>
+              <button
+                onClick={surpriseMe}
+                className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all"
+                title="Surprise Me"
+              >
+                <Shuffle size={18} />
+              </button>
+              <button
+                className="relative p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all"
+                title="Notifications"
+              >
+                <Bell size={18} />
+                {notifications > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </button>
+              <button
+                onClick={() => setShowSearch(true)}
+                className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all"
+              >
+                <Search size={18} />
+              </button>
+            </>
           )}
+
+          {/* Profile */}
+          <div ref={profileRef} className="relative">
+            <button
+              onClick={() => setShowProfile(!showProfile)}
+              className="flex items-center gap-1 p-1.5 rounded-full hover:bg-white/10 transition-colors"
+            >
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center">
+                <User size={14} className="text-white" />
+              </div>
+              <ChevronDown size={14} className="text-white/50" />
+            </button>
+
+            {showProfile && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-gray-900/95 backdrop-blur-sm border border-white/10 rounded-xl shadow-xl overflow-hidden">
+                <div className="p-3 border-b border-white/10">
+                  <p className="text-white font-medium text-sm">James</p>
+                  <p className="text-white/40 text-xs">Member</p>
+                </div>
+                <div className="p-1">
+                  <button className="w-full flex items-center gap-3 px-3 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-colors">
+                    <User size={14} />
+                    Manage Profiles
+                  </button>
+                  <button className="w-full flex items-center gap-3 px-3 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-colors">
+                    <Settings size={14} />
+                    Settings
+                  </button>
+                  <button className="w-full flex items-center gap-3 px-3 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-colors">
+                    <Bell size={14} />
+                    Notifications
+                  </button>
+                  <div className="border-t border-white/10 my-1" />
+                  <button className="w-full flex items-center gap-3 px-3 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-colors">
+                    <User size={14} />
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Mobile menu trigger */}
@@ -118,12 +192,8 @@ function MobileMenu() {
         <ChevronDown size={18} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <div className="absolute top-full right-0 mt-2 w-56 bg-[#12121a]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-xl overflow-hidden">
+        <div className="absolute top-full right-0 mt-2 w-44 bg-[#12121a]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-xl overflow-hidden">
           <MobileNavLink to="/" icon={<Home size={15} />} label="Home" />
-          <MobileNavLink to="/explore" icon={<Sparkles size={15} />} label="Explore" />
-          <MobileNavLink to="/top10" icon={<TrendingUp size={15} />} label="Top 10" />
-          <MobileNavLink to="/lists" icon={<List size={15} />} label="Lists" />
-          <MobileNavLink to="/achievements" icon={<Medal size={15} />} label="Achievements" />
           <MobileNavLink to="/watchlist" icon={<Bookmark size={15} />} label="Watchlist" />
         </div>
       )}
@@ -138,7 +208,9 @@ function MobileNavLink({ to, icon, label }: { to: string; icon: React.ReactNode;
     <Link
       to={to}
       className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-        active ? 'text-emerald-400 bg-emerald-400/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+        active
+          ? 'text-emerald-400 bg-emerald-400/10'
+          : 'text-white/70 hover:text-white hover:bg-white/10'
       }`}
     >
       {icon}

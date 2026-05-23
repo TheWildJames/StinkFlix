@@ -106,6 +106,9 @@ export const getSeasonEpisodes = (tvId: number, season: number): Promise<{ episo
 export const searchMulti = (query: string, page = '1') =>
   apiFetch('/search/multi', { query, page });
 
+export const searchTMDB = (query: string) =>
+  apiFetch('/search/movie', { query });
+
 export const getGenres = (type: 'movie' | 'tv') =>
   apiFetch(`/genre/${type}/list`);
 

@@ -10,7 +10,6 @@ import {
 import { useSettings } from '../contexts/SettingsContext';
 import { useToast } from '../contexts/ToastContext';
 import { useHistory } from '../contexts/HistoryContext';
-import { useAchievements } from '../contexts/AchievementsContext';
 import { getImdbId, getVideos } from '../lib/tmdb';
 import { getStreamLinksForItem, generateDirectStreamLinks, generateMovieEmbedSources, generateTVEmbedSources } from '../lib/streamSources';
 import type { StreamLink } from '../lib/streamSources';
@@ -48,7 +47,6 @@ export default function StreamPlayer({
   const { settings } = useSettings();
   const { addToast } = useToast();
   const { addToHistory, getRecentViews } = useHistory();
-  const { unlockAchievement } = useAchievements();
   const params = useParams();
 
   const [streams, setStreams] = useState<StreamLink[]>([]);
@@ -116,8 +114,6 @@ export default function StreamPlayer({
           episode: e,
           season: s,
         });
-
-        unlockAchievement('first_stream');
       } catch (error) {
         console.error('Error loading streams:', error);
       } finally {
@@ -186,7 +182,6 @@ export default function StreamPlayer({
     const url = `${window.location.origin}/watch/${type}/${tmdbId}`;
     navigator.clipboard.writeText(url);
     addToast('Link copied to clipboard!', 'copy');
-    unlockAchievement('share_shark');
   };
 
   const copyEmbedCode = () => {
