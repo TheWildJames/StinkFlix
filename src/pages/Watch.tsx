@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, List, AlertTriangle, ExternalLink } from 'lucide-react';
-import { getDetail, getSeasonEpisodes, img } from '../lib/tmdb';
-import { getMovieSources, getTVSources, getImdbId } from '../lib/sources';
+import { ArrowLeft, ChevronLeft, ChevronRight, List, AlertTriangle, ExternalLink, Check, X as XIcon } from 'lucide-react';
+import { getDetail, getSeasonEpisodes, img, getImdbId as tmdbGetImdbId } from '../lib/tmdb';
+import { getImdbId, generateMovieEmbedSources, generateTVEmbedSources, generateDirectStreamLinks, validateStreams, getBestStreamIndex } from '../lib/streamSources';
 import type { MediaDetail, Episode } from '../lib/tmdb';
-import type { EmbedSource } from '../lib/sources';
+import type { StreamLink, StreamValidationResult } from '../lib/streamSources';
 import { PageSpinner } from '../components/Spinner';
 
 export default function WatchPage() {
@@ -18,37 +18,65 @@ export default function WatchPage() {
 
   const [detail, setDetail] = useState<MediaDetail | null>(null);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
-  const [sources, setSources] = useState<EmbedSource[]>([]);
+  const [streams, setStreams] = useState<StreamLink[]>([]);
+  const [validatedStreams, setValidatedStreams] = useState<StreamValidationResult[]>([]);
   const [sourceIdx, setSourceIdx] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [validating, setValidating] = useState(false);
+  const [autoSelectName, setAutoSelectName] = useState<string>();
   const [showEpisodes, setShowEpisodes] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
 
   useEffect(() => {
     setLoading(true);
+    setValidating(true);
+    setAutoSelectName(undefined);
     window.scrollTo(0, 0);
 
     const loadData = async () => {
       const d = await getDetail(type, id);
       setDetail(d);
 
-      const imdbId = await getImdbId(type, id);
-      const srcs = type === 'movie'
-        ? getMovieSources(imdbId ?? String(id), id)
-        : getTVSources(imdbId ?? String(id), id, season, episode);
-      setSources(srcs);
-      setSourceIdx(0);
+      const imdbId = await tmdbGetImdbId(type, id) || String(id);
+      let loadedStreams: StreamLink[] = [];
+
+      if (type === 'movie') {
+        loadedStreams = [
+          ...generateMovieEmbedSources(imdbId, id),
+          ...generateDirectStreamLinks(imdbId, id, 'movie'),
+        ];
+      } else {
+        loadedStreams = [
+          ...generateTVEmbedSources(imdbId, id, season, episode),
+          ...generateDirectStreamLinks(imdbId, id, 'tv', season, episode),
+        ];
+      }
+
+      setStreams(loadedStreams);
+
+      // Validate streams and auto-select best quality
+      const validationResults = await validateStreams(loadedStreams, 20000, true);
+      setValidatedStreams(validationResults);
+
+      const bestIdx = getBestStreamIndex(loadedStreams, validationResults);
+      setSourceIdx(bestIdx);
       setIframeKey(k => k + 1);
+
+      const autoSelectStream = loadedStreams.find(l => l.autoSelect && validationResults.find(r => r.link === l && r.isValid));
+      if (autoSelectStream) {
+        setAutoSelectName(autoSelectStream.name);
+      }
 
       if (type === 'tv') {
         const epData = await getSeasonEpisodes(id, season);
         setEpisodes(epData.episodes ?? []);
       }
 
+      setValidating(false);
       setLoading(false);
     };
 
-    loadData().catch(() => setLoading(false));
+    loadData().catch(() => { setLoading(false); setValidating(false); });
   }, [type, id, season, episode]);
 
   if (loading) return <PageSpinner />;
@@ -66,6 +94,20 @@ export default function WatchPage() {
   const changeSource = (idx: number) => {
     setSourceIdx(idx);
     setIframeKey(k => k + 1);
+  };
+
+  const retryValidation = async () => {
+    setValidating(true);
+    const validationResults = await validateStreams(streams, 20000, true);
+    setValidatedStreams(validationResults);
+    const bestIdx = getBestStreamIndex(streams, validationResults);
+    setSourceIdx(bestIdx);
+    setIframeKey(k => k + 1);
+    const autoSelectStream = streams.find(l => l.autoSelect && validationResults.find(r => r.link === l && r.isValid));
+    if (autoSelectStream) {
+      setAutoSelectName(autoSelectStream.name);
+    }
+    setValidating(false);
   };
 
   return (
@@ -124,34 +166,83 @@ export default function WatchPage() {
               {/* Source selector */}
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <span className="text-white/40 text-xs uppercase tracking-wider font-medium">Source:</span>
-                {sources.map((s, i) => (
-                  <button
-                    key={s.name}
-                    onClick={() => changeSource(i)}
-                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
-                      i === sourceIdx
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-white/8 text-white/60 hover:bg-white/15 hover:text-white border border-white/10'
-                    }`}
-                  >
-                    {s.name}
-                  </button>
-                ))}
-                <a
-                  href={sources[sourceIdx]?.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-auto flex items-center gap-1 text-white/30 hover:text-white/60 text-xs transition-colors"
-                >
-                  Open in tab <ExternalLink size={12} />
-                </a>
+                
+                {validating ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-emerald-400 text-sm">Validating...</span>
+                  </div>
+                ) : (
+                  <>
+                    {autoSelectName && (
+                      <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-2.5 py-1">
+                        <Check size={12} className="text-emerald-400" />
+                        <span className="text-emerald-400 text-xs font-medium">Auto: {autoSelectName}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex flex-wrap items-center gap-2">
+                      {streams.map((s, i) => {
+                        const validationResult = validatedStreams.find(r => r.link === s);
+                        const isValid = validationResult?.isValid || false;
+                        const isAuto = s.autoSelect;
+                        
+                        return (
+                          <button
+                            key={s.name}
+                            onClick={() => changeSource(i)}
+                            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-medium transition-all ${
+                              i === sourceIdx
+                                ? 'bg-emerald-500 text-white'
+                                : isValid
+                                ? 'bg-white/8 text-white/70 hover:bg-white/15 hover:text-white border border-white/10'
+                                : 'bg-white/3 text-white/25 hover:bg-white/5 border border-transparent opacity-50'
+                            }`}
+                          >
+                            <span>{s.name}</span>
+                            {isValid && i !== sourceIdx && (
+                              <Check size={10} className="text-emerald-400" />
+                            )}
+                            {!isValid && validatedStreams.length > 0 && i !== sourceIdx && (
+                              <XIcon size={10} className="text-red-400/50" />
+                            )}
+                          </button>
+                        );
+                      })}
+                      
+                      <button
+                        onClick={retryValidation}
+                        className="px-2 py-1 text-xs text-white/40 hover:text-white/60 hover:bg-white/5 rounded transition-all"
+                        disabled={validating}
+                      >
+                        Re-validate
+                      </button>
+                      
+                      <a
+                        href={streams[sourceIdx]?.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-white/30 hover:text-white/60 text-xs transition-colors"
+                      >
+                        Open in tab <ExternalLink size={12} />
+                      </a>
+                    </div>
+                  </>
+                )}
               </div>
 
+              {/* Status info */}
+              {!validating && validatedStreams.length > 0 && (
+                <div className="flex items-center gap-2 text-xs text-white/40 mb-2">
+                  <span>{validatedStreams.filter(r => r.isValid).length}/{validatedStreams.length} sources valid</span>
+                </div>
+              )}
+              
               {/* Notice */}
               <div className="flex items-start gap-2 bg-amber-500/5 border border-amber-500/15 rounded-lg px-3 py-2">
                 <AlertTriangle size={13} className="text-amber-400/60 mt-0.5 shrink-0" />
                 <p className="text-white/30 text-xs leading-relaxed">
-                  If one source doesn't work, try another. Sources are third-party embeds and availability may vary.
+                  Auto-selected best quality stream. Invalid sources shown dimmed. Click to try alternative sources.
                 </p>
               </div>
 
