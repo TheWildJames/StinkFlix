@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, List, AlertTriangle, ExternalLink, Check, X as XIcon } from 'lucide-react';
-import { getDetail, getSeasonEpisodes, img, getImdbId as tmdbGetImdbId } from '../lib/tmdb';
+import { getDetail, getSeasonEpisodes, img } from '../lib/tmdb';
 import { getImdbId, generateMovieEmbedSources, generateTVEmbedSources, generateDirectStreamLinks, validateStreams, getBestStreamIndex } from '../lib/streamSources';
 import type { MediaDetail, Episode } from '../lib/tmdb';
 import type { StreamLink, StreamValidationResult } from '../lib/streamSources';
