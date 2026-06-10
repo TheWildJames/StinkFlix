@@ -37,7 +37,7 @@ export default function WatchPage() {
       const d = await getDetail(type, id);
       setDetail(d);
 
-      const imdbId = await tmdbGetImdbId(type, id) || String(id);
+      const imdbId = await getImdbId(type, id) || String(id);
       let loadedStreams: StreamLink[] = [];
 
       if (type === 'movie') {
@@ -153,7 +153,7 @@ export default function WatchPage() {
             <div className="relative w-full bg-black" style={{ aspectRatio: '16/9' }}>
               <iframe
                 key={iframeKey}
-                src={sources[sourceIdx]?.url}
+                src={streams[sourceIdx]?.url}
                 className="absolute inset-0 w-full h-full"
                 allowFullScreen
                 allow="autoplay; fullscreen; picture-in-picture"
