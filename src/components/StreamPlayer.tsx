@@ -11,8 +11,8 @@ import { useSettings } from '../contexts/SettingsContext';
 import { useToast } from '../contexts/ToastContext';
 import { useHistory } from '../contexts/HistoryContext';
 import { getImdbId, getVideos } from '../lib/tmdb';
-import { getStreamLinksForItem, generateDirectStreamLinks, generateMovieEmbedSources, generateTVEmbedSources } from '../lib/streamSources';
-import type { StreamLink } from '../lib/streamSources';
+import { getStreamLinksForItem, generateDirectStreamLinks, generateMovieEmbedSources, generateTVEmbedSources, validateStreams, getBestStreamIndex } from '../lib/streamSources';
+import type { StreamLink, StreamValidationResult } from '../lib/streamSources';
 
 interface StreamPlayerProps {
   tmdbId: number;
@@ -50,7 +50,9 @@ export default function StreamPlayer({
   const params = useParams();
 
   const [streams, setStreams] = useState<StreamLink[]>([]);
+  const [validatedStreams, setValidatedStreams] = useState<StreamValidationResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [validating, setValidating] = useState(false);
   const [currentStream, setCurrentStream] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
@@ -65,6 +67,7 @@ export default function StreamPlayer({
   const [isCinema, setIsCinema] = useState(false);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [autoSelectResult, setAutoSelectResult] = useState<{found: boolean, streamName?: string}>({found: false});
   const [watchlist, setWatchlist] = useState<number[]>(() => {
     try {
       const stored = localStorage.getItem('watchlist-ids');
@@ -101,10 +104,21 @@ export default function StreamPlayer({
 
         setStreams(loadedStreams);
 
-        const defaultIdx = loadedStreams.findIndex(
-          s => s.name.toLowerCase().includes(settings.defaultStreamSource.toLowerCase())
-        );
-        setCurrentStream(defaultIdx >= 0 ? defaultIdx : 0);
+        // Validate streams and auto-select the best one
+        setValidating(true);
+        const validationResults = await validateStreams(loadedStreams, 20000, true);
+        setValidatedStreams(validationResults);
+        
+        const bestIdx = getBestStreamIndex(loadedStreams, validationResults);
+        setCurrentStream(bestIdx);
+        
+        const bestStream = loadedStreams[bestIdx];
+        const autoSelectStream = loadedStreams.find(l => l.autoSelect && validationResults.find(r => r.link === l && r.isValid));
+        if (autoSelectStream) {
+          setAutoSelectResult({ found: true, streamName: autoSelectStream.name });
+        }
+        
+        setValidating(false);
 
         addToHistory({
           id: tmdbId,
@@ -123,7 +137,7 @@ export default function StreamPlayer({
 
     loadStreams();
     setInWatchlist(watchlist.includes(tmdbId));
-  }, [tmdbId, type, s, e, settings.defaultStreamSource]);
+  }, [tmdbId, type, s, e]);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement && playerContainerRef.current) {
@@ -218,6 +232,23 @@ export default function StreamPlayer({
     addToast(`Switched to ${streams[index]?.name}`, 'info');
   };
 
+  const retryValidation = async () => {
+    setValidating(true);
+    const validationResults = await validateStreams(streams, 20000, true);
+    setValidatedStreams(validationResults);
+    
+    const bestIdx = getBestStreamIndex(streams, validationResults);
+    setCurrentStream(bestIdx);
+    
+    const autoSelectStream = streams.find(l => l.autoSelect && validationResults.find(r => r.link === l && r.isValid));
+    if (autoSelectStream) {
+      setAutoSelectResult({ found: true, streamName: autoSelectStream.name });
+    }
+    
+    setValidating(false);
+    addToast('Stream validation complete', 'success');
+  };
+
   const playbackSpeeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
   const currentStreamData = streams[currentStream];
@@ -232,7 +263,10 @@ export default function StreamPlayer({
       <div className="flex items-center justify-center h-full bg-black">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-white/60">Loading streams...</p>
+          <p className="text-white/60">{validating ? 'Validating streams...' : 'Loading streams...'}</p>
+          {autoSelectResult.found && (
+            <p className="text-emerald-400 text-sm">Auto-selected best quality stream: {autoSelectResult.streamName}</p>
+          )}
         </div>
       </div>
     );
@@ -387,27 +421,78 @@ export default function StreamPlayer({
                     >
                       <Settings size={16} />
                       <span className="hidden sm:inline">{currentStreamData?.name}</span>
+                      {validating && <span className="text-xs text-emerald-400 animate-pulse">...</span>}
+                      {!validating && validatedStreams.some(r => r.isValid) && (
+                        <span className="w-2 h-2 bg-emerald-400 rounded-full"></span>
+                      )}
                       <ChevronDown size={14} />
                     </button>
-
+    
                     {showSourceSelector && (
-                      <div className="absolute bottom-full mb-2 left-0 w-64 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl max-h-80 overflow-y-auto">
+                      <div className="absolute bottom-full mb-2 left-0 w-80 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl max-h-96 overflow-y-auto">
                         <div className="p-2">
-                          <p className="text-white/50 text-xs px-2 py-1 font-medium">Stream Sources</p>
-                          {streams.map((stream, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => selectSource(idx)}
-                              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
-                                idx === currentStream
-                                  ? 'bg-emerald-500/20 text-emerald-400'
-                                  : 'text-white/70 hover:bg-white/10 hover:text-white'
-                              }`}
-                            >
-                              <div className="font-medium">{stream.name}</div>
-                              <div className="text-xs text-white/40 truncate">{stream.url}</div>
-                            </button>
-                          ))}
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-white/50 text-xs font-medium">Stream Sources</p>
+                            {!validating && (
+                              <button
+                                onClick={retryValidation}
+                                className="text-xs text-emerald-400 hover:text-emerald-300 px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-all"
+                              >
+                                Re-validate
+                              </button>
+                            )}
+                          </div>
+                          
+                          {!validating && validatedStreams.length > 0 && (
+                            <p className="text-white/40 text-xs px-2 py-1 mb-1">
+                              {validatedStreams.filter(r => r.isValid).length} valid of {validatedStreams.length} sources
+                            </p>
+                          )}
+                          
+                          {streams.map((stream, idx) => {
+                            const validationResult = validatedStreams.find(r => r.link === stream);
+                            const isValid = validationResult?.isValid || false;
+                            const isAutoSelect = stream.autoSelect;
+                            const priority = stream.priority || 999;
+                            
+                            return (
+                              <button
+                                key={idx}
+                                onClick={() => selectSource(idx)}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                                  idx === currentStream
+                                    ? 'bg-emerald-500/20 text-emerald-400'
+                                    : isValid
+                                    ? 'text-white/70 hover:bg-white/10 hover:text-white'
+                                    : 'text-white/30 hover:bg-white/5'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <div className="font-medium">{stream.name}</div>
+                                    {isAutoSelect && !validating && isValid && (
+                                      <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded">AUTO</span>
+                                    )}
+                                    {isAutoSelect && !isValid && (
+                                      <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">OFF</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <span className="text-white/40">{stream.quality}</span>
+                                    {!isValid && !validating && (
+                                      <span className="text-red-400/60">✕</span>
+                                    )}
+                                  </div>
+                                </div>
+                                {!validating && isValid && (
+                                  <div className="text-xs text-emerald-400/60 mt-1">✓ Valid</div>
+                                )}
+                                {!validating && !isValid && validatedStreams.length > 0 && (
+                                  <div className="text-xs text-red-400/60 mt-1">✕ Invalid</div>
+                                )}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     )}

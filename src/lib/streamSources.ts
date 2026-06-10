@@ -4,6 +4,9 @@ export interface StreamLink {
   type: 'embed' | 'direct' | 'app';
   quality?: string;
   category?: string;
+  priority?: number; // Lower = better (1 = highest priority)
+  reliability?: number; // 0-100 score
+  autoSelect?: boolean; // Auto-select if valid
 }
 
 export interface StreamResult {
@@ -39,32 +42,43 @@ export async function getImdbId(type: 'movie' | 'tv', tmdbId: number): Promise<s
 export function generateMovieEmbedSources(imdbId: string, tmdbId: number): StreamLink[] {
   const sources: StreamLink[] = [];
 
-  // Primary reliable embeds
+  // Primary reliable embeds (Priority 1 - Best)
   sources.push(
-    { name: '2Embed', url: `https://www.2embed.cc/embed/${imdbId}`, type: 'embed' },
-    { name: '2Embed (Fast)', url: `https://www.2embed.cc/stream/${imdbId}`, type: 'embed' },
-    { name: 'SuperEmbed', url: `https://multiembed.mov/?video_id=${imdbId}&tmdb=1`, type: 'embed' },
+    { name: '2Embed', url: `https://www.2embed.cc/embed/${imdbId}`, type: 'embed', quality: '1080p', priority: 1, reliability: 90, autoSelect: true },
+    { name: '2Embed (Fast)', url: `https://www.2embed.cc/stream/${imdbId}`, type: 'embed', quality: '1080p', priority: 1, reliability: 90, autoSelect: true },
+    { name: 'SuperEmbed (TMDB)', url: `https://multiembed.mov/?video_id=${imdbId}&tmdb=1`, type: 'embed', quality: '1080p', priority: 1, reliability: 88, autoSelect: true },
   );
 
-  // VidSrc alternatives
+  // VidSrc alternatives (Priority 2)
   if (tmdbId) {
     sources.push(
-      { name: 'VidSrc.me', url: `https://vidsrc.me/embed/movie/${tmdbId}`, type: 'embed' },
-      { name: 'VidSrc.to', url: `https://vidsrc.to/embed/movie/${imdbId}`, type: 'embed' },
+      { name: 'VidSrc.me', url: `https://vidsrc.me/embed/movie/${tmdbId}`, type: 'embed', quality: '1080p', priority: 2, reliability: 85, autoSelect: true },
+      { name: 'VidSrc.to', url: `https://vidsrc.to/embed/movie/${imdbId}`, type: 'embed', quality: '1080p', priority: 2, reliability: 82 },
+      { name: 'VidSrc.ac', url: `https://vidsrc.ac/embed/movie/${imdbId}`, type: 'embed', quality: '1080p', priority: 2, reliability: 80 },
     );
   }
 
-  // Additional embeds
+  // Additional embeds (Priority 3)
   if (imdbId) {
     sources.push(
-      { name: 'Embed.su', url: `https://embed.su/embed/movie/${imdbId}`, type: 'embed' },
-      { name: 'FlixGo', url: `https://flixgo.net/embed/${imdbId}`, type: 'embed' },
+      { name: 'Embed.su', url: `https://embed.su/embed/movie/${imdbId}`, type: 'embed', quality: '720p', priority: 3, reliability: 75 },
+      { name: 'FlixGo', url: `https://flixgo.net/embed/${imdbId}`, type: 'embed', quality: '1080p', priority: 3, reliability: 72, autoSelect: true },
+      { name: 'CineGuaran', url: `https://www.cineguaran.pw/embed/movie-${imdbId}.html`, type: 'embed', quality: '720p', priority: 3, reliability: 70 },
     );
   }
 
-  // Backup sources
+  // Reliable alternatives (Priority 4)
   sources.push(
-    { name: 'AutoEmbed', url: `https://player.autoembed.cc/embed/movie/${tmdbId}`, type: 'embed' },
+    { name: 'AutoEmbed', url: `https://player.autoembed.cc/embed/movie/${tmdbId}`, type: 'embed', quality: '1080p', priority: 4, reliability: 78, autoSelect: true },
+    { name: 'EmbedR', url: `https://embedr.ovh/movie/${imdbId}`, type: 'embed', quality: '720p', priority: 4, reliability: 65 },
+    { name: 'StreamTape', url: `https://streamtape.com/e/${imdbId}`, type: 'embed', quality: '720p', priority: 4, reliability: 60 },
+  );
+
+  // Backup sources (Priority 5)
+  sources.push(
+    { name: 'DoodStream', url: `https://dood.to/e/${imdbId}`, type: 'embed', quality: '720p', priority: 5, reliability: 50 },
+    { name: 'MixDrop', url: `https://mixdrop.co/e/${imdbId}`, type: 'embed', quality: '720p', priority: 5, reliability: 45 },
+    { name: 'Uqload', url: `https://uqload.com/embed-${imdbId}.html`, type: 'embed', quality: '480p', priority: 5, reliability: 40 },
   );
 
   return sources;
@@ -72,18 +86,25 @@ export function generateMovieEmbedSources(imdbId: string, tmdbId: number): Strea
 
 export function generateTVEmbedSources(imdbId: string, tmdbId: number, season: number, episode: number): StreamLink[] {
   return [
-    { name: 'VidSrc Pro', url: `https://vidsrc.pro/embed/tv/${tmdbId}/${season}/${episode}`, type: 'embed' },
-    { name: 'VidSrc', url: `https://vidsrc.to/embed/tv/${imdbId}/${season}/${episode}`, type: 'embed' },
-    { name: 'VidSrc to', url: `https://vidsrc.cc/embed/tv/${imdbId}/${season}/${episode}`, type: 'embed' },
-    { name: '2Embed', url: `https://www.2embed.cc/embedtv/${imdbId}?s=${season}&e=${episode}`, type: 'embed' },
-    { name: '2Embed Fast', url: `https://www.2embed.cc/streamtv/${imdbId}?s=${season}&e=${episode}`, type: 'embed' },
-    { name: 'SuperEmbed', url: `https://multiembed.mov/?video_id=${imdbId}&tmdb=1&s=${season}&e=${episode}`, type: 'embed' },
-    { name: 'EmbedSu', url: `https://embed.su/embed/tv/${tmdbId}/${season}/${episode}`, type: 'embed' },
-    { name: 'SmashyStream', url: `https://player.smashystream.com/tv/${tmdbId}/${season}/${episode}`, type: 'embed' },
-    { name: 'AutoEmbed', url: `https://player.autoembed.cc/embed/tv/${tmdbId}/${season}/${episode}`, type: 'embed' },
-    { name: 'NontonGo', url: `https://www.nontongo.net/embed/tv/${tmdbId}/${season}/${episode}`, type: 'embed' },
-    { name: 'FlixGo', url: `https://flixgo.net/embed/tv/${imdbId}/${season}/${episode}`, type: 'embed' },
-    { name: 'EmbedR', url: `https://embed.su/tv/${imdbId}/${season}/${episode}`, type: 'embed' },
+    // Priority 1 - Best reliability
+    { name: '2Embed', url: `https://www.2embed.cc/embedtv/${imdbId}?s=${season}&e=${episode}`, type: 'embed', quality: '1080p', priority: 1, reliability: 90, autoSelect: true },
+    { name: '2Embed Fast', url: `https://www.2embed.cc/streamtv/${imdbId}?s=${season}&e=${episode}`, type: 'embed', quality: '1080p', priority: 1, reliability: 88, autoSelect: true },
+    { name: 'SuperEmbed (TMDB)', url: `https://multiembed.mov/?video_id=${imdbId}&tmdb=1&s=${season}&e=${episode}`, type: 'embed', quality: '1080p', priority: 1, reliability: 87, autoSelect: true },
+    // Priority 2 - VidSrc family
+    { name: 'VidSrc Pro', url: `https://vidsrc.pro/embed/tv/${tmdbId}/${season}/${episode}`, type: 'embed', quality: '1080p', priority: 2, reliability: 85, autoSelect: true },
+    { name: 'VidSrc.me', url: `https://vidsrc.me/embed/tv/${tmdbId}/${season}/${episode}`, type: 'embed', quality: '1080p', priority: 2, reliability: 82 },
+    { name: 'VidSrc.to', url: `https://vidsrc.to/embed/tv/${imdbId}/${season}/${episode}`, type: 'embed', quality: '1080p', priority: 2, reliability: 80 },
+    { name: 'VidSrc.ac', url: `https://vidsrc.ac/embed/tv/${tmdbId}/${season}/${episode}`, type: 'embed', quality: '1080p', priority: 2, reliability: 78 },
+    // Priority 3 - Good alternatives
+    { name: 'Embed.su', url: `https://embed.su/embed/tv/${tmdbId}/${season}/${episode}`, type: 'embed', quality: '720p', priority: 3, reliability: 75 },
+    { name: 'SmashyStream', url: `https://player.smashystream.com/tv/${tmdbId}/${season}/${episode}`, type: 'embed', quality: '1080p', priority: 3, reliability: 73, autoSelect: true },
+    { name: 'AutoEmbed', url: `https://player.autoembed.cc/embed/tv/${tmdbId}/${season}/${episode}`, type: 'embed', quality: '1080p', priority: 3, reliability: 76, autoSelect: true },
+    { name: 'FlixGo', url: `https://flixgo.net/embed/tv/${imdbId}/${season}/${episode}`, type: 'embed', quality: '1080p', priority: 3, reliability: 70, autoSelect: true },
+    { name: 'NontonGo', url: `https://www.nontongo.net/embed/tv/${tmdbId}/${season}/${episode}`, type: 'embed', quality: '720p', priority: 3, reliability: 68 },
+    // Priority 4 - Backup options
+    { name: 'VidSrc.cc', url: `https://vidsrc.cc/embed/tv/${imdbId}/${season}/${episode}`, type: 'embed', quality: '720p', priority: 4, reliability: 65 },
+    { name: 'EmbedR', url: `https://embedr.ovh/tv/${imdbId}/${season}/${episode}`, type: 'embed', quality: '720p', priority: 4, reliability: 60 },
+    { name: 'DoodStream', url: `https://dood.to/e/${imdbId}-${season}-${episode}`, type: 'embed', quality: '720p', priority: 5, reliability: 50 },
   ];
 }
 
@@ -91,17 +112,26 @@ export function generateDirectStreamLinks(imdbId: string, tmdbId: number, type: 
   const links: StreamLink[] = [];
   const idParam = type === 'movie' ? imdbId : `${imdbId}/${season}/${episode}`;
 
+  // Priority 1 - Direct stream APIs
   links.push(
-    { name: 'API 1 (m3u8)', url: `https://api.videoapi.sk/v2/stream/start?imdbId=${imdbId}`, type: 'direct', quality: 'auto' },
-    { name: 'API 2 (direct)', url: `https://vid_api.crown0.cc/movies/${imdbId}`, type: 'direct', quality: '1080p' },
-    { name: 'StreamSB', url: `https://streamsb.net/e/${imdbId}.mp4`, type: 'direct', quality: '1080p' },
-    { name: 'XStreamCDN', url: `https://xstreamcdn.com/api/stream.php?id=${imdbId}`, type: 'direct', quality: 'auto' },
+    { name: 'VideoAPI.sk', url: `https://api.videoapi.sk/v2/stream/start?imdbId=${imdbId}`, type: 'direct', quality: '1080p', priority: 1, reliability: 80, autoSelect: true },
+    { name: 'Crown0 API', url: `https://vid_api.crown0.cc/movies/${imdbId}`, type: 'direct', quality: '1080p', priority: 1, reliability: 78, autoSelect: true },
+    { name: 'XStreamCDN', url: `https://xstreamcdn.com/api/stream.php?id=${imdbId}`, type: 'direct', quality: '1080p', priority: 1, reliability: 75, autoSelect: true },
   );
 
+  // Priority 2 - Alternative direct streams
+  links.push(
+    { name: 'StreamSB', url: `https://streamsb.net/e/${imdbId}.mp4`, type: 'direct', quality: '1080p', priority: 2, reliability: 70 },
+    { name: 'StreamingCommunity', url: `https://streamingcommunity.to/api/v1/stream/${imdbId}`, type: 'direct', quality: '1080p', priority: 2, reliability: 68 },
+    { name: 'Filemoon', url: `https://filemoonembed.com/e/${imdbId}`, type: 'embed', quality: '1080p', priority: 2, reliability: 65 },
+  );
+
+  // Priority 3 - Backup direct links
   if (type === 'movie') {
     links.push(
-      { name: 'MP4 Direct', url: `https://directdown.net/api/download?imdb=${imdbId}`, type: 'direct', quality: '1080p' },
-      { name: 'M3U8 Playlist', url: `https://m3u8api.github.io/api.php?imdb=${imdbId}`, type: 'direct', quality: 'multi' },
+      { name: 'MP4 Direct', url: `https://directdown.net/api/download?imdb=${imdbId}`, type: 'direct', quality: '1080p', priority: 3, reliability: 60 },
+      { name: 'M3U8 Playlist', url: `https://m3u8api.github.io/api.php?imdb=${imdbId}`, type: 'direct', quality: 'multi', priority: 3, reliability: 55 },
+      { name: 'DoodStream', url: `https://dood.to/e/${imdbId}`, type: 'embed', quality: '720p', priority: 4, reliability: 50 },
     );
   }
 
@@ -111,22 +141,29 @@ export function generateDirectStreamLinks(imdbId: string, tmdbId: number, type: 
 
 
 export function generateAnimeSources(animeId: string, tmdbId: number, episodeNum?: number): StreamLink[] {
+  const ep = episodeNum || 1;
   const links: StreamLink[] = [];
 
-  const embedSources = [
-    { name: 'Gogoanime CDN1', url: `https://gogocdn1.pro/embed-${animeId.replace('-', '')}-${episodeNum || 1}.html?ap=1&title=` },
-    { name: 'Gogoanime CDN2', url: `https://www1.gogocdn.pro/embed-${animeId.replace('-', '')}-${episodeNum || 1}.html` },
-    { name: 'AniWatch', url: `https://aniwatch.tv/api/episode/${animeId}/stream` },
-    { name: '9Anime', url: `https://9anime.to/watch/${animeId}${episodeNum ? `?ep=${episodeNum}` : ''}` },
-    { name: 'AnimeFlix', url: `https://animiflix.tv/watch/${animeId}${episodeNum ? `?episode=${episodeNum}` : ''}` },
-    { name: 'BiliAnime', url: `https://bilianime.tv/anime/${animeId}${episodeNum ? `/ep${episodeNum}` : ''}` },
-    { name: 'AnimeKisa', url: `https://animekisa.pro/category/${animeId}${episodeNum ? `-episode-${episodeNum}` : ''}` },
-    { name: 'AnimePahe', url: `https://animepahe.ru/watch/${animeId}${episodeNum ? `&q=0` : ''}` },
-  ];
+  // Priority 1 - Most reliable anime sources
+  links.push(
+    { name: 'Gogoanime CDN1', url: `https://gogocdn1.pro/embed-${animeId.replace('-', '')}-${ep}.html?ap=1&title=`, type: 'embed', quality: '720p', priority: 1, reliability: 88, autoSelect: true },
+    { name: 'Gogoanime CDN2', url: `https://www1.gogocdn.pro/embed-${animeId.replace('-', '')}-${ep}.html`, type: 'embed', quality: '720p', priority: 1, reliability: 85, autoSelect: true },
+    { name: 'AnimeFlix', url: `https://animiflix.tv/watch/${animeId}${ep ? `?episode=${ep}` : ''}`, type: 'embed', quality: '1080p', priority: 1, reliability: 80, autoSelect: true },
+  );
 
-  for (const src of embedSources) {
-    links.push(src as StreamLink);
-  }
+  // Priority 2 - Good alternatives
+  links.push(
+    { name: 'AniWatch', url: `https://aniwatch.tv/api/episode/${animeId}/stream`, type: 'embed', quality: '1080p', priority: 2, reliability: 78 },
+    { name: '9Anime', url: `https://9anime.to/watch/${animeId}${ep ? `?ep=${ep}` : ''}`, type: 'embed', quality: '720p', priority: 2, reliability: 72 },
+    { name: 'AnimeKisa', url: `https://animekisa.pro/category/${animeId}${ep ? `-episode-${ep}` : ''}`, type: 'embed', quality: '720p', priority: 2, reliability: 70 },
+  );
+
+  // Priority 3 - Backup sources
+  links.push(
+    { name: 'BiliAnime', url: `https://bilianime.tv/anime/${animeId}${ep ? `/ep${ep}` : ''}`, type: 'embed', quality: '720p', priority: 3, reliability: 65 },
+    { name: 'AnimePahe', url: `https://animepahe.ru/watch/${animeId}${ep ? `&q=0` : ''}`, type: 'embed', quality: '480p', priority: 3, reliability: 60 },
+    { name: 'AniMix', url: `https://animix.pl/api/play/${animeId}?ep=${ep}`, type: 'direct', quality: '1080p', priority: 3, reliability: 58 },
+  );
 
   return links;
 }
@@ -288,4 +325,122 @@ export function getStreamLinkCategories(links: StreamLink[]): Map<string, Stream
   }
 
   return categories;
+}
+
+// Stream validation interface
+export interface StreamValidationResult {
+  link: StreamLink;
+  isValid: boolean;
+  loadTime: number;
+}
+
+/**
+ * Validate a stream link by attempting to load it in a hidden iframe with timeout
+ * Returns true if the iframe loads successfully within timeout
+ */
+export async function validateStreamLink(link: StreamLink, timeout: number = 8000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const startTime = Date.now();
+    
+    try {
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = link.url;
+      
+      // Iframe loaded successfully
+      iframe.onload = () => {
+        const loadTime = Date.now() - startTime;
+        document.body.removeChild(iframe);
+        resolve(true);
+      };
+      
+      // Timeout - consider invalid if doesn't load
+      setTimeout(() => {
+        try {
+          document.body.removeChild(iframe);
+        } catch {}
+        resolve(false);
+      }, timeout);
+      
+      document.body.appendChild(iframe);
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
+/**
+ * Validate multiple streams and return results
+ * Stops after finding first valid auto-select stream, or validates all
+ */
+export async function validateStreams(
+  links: StreamLink[],
+  maxValidationTime: number = 15000,
+  findAutoSelectOnly: boolean = false
+): Promise<StreamValidationResult[]> {
+  const results: StreamValidationResult[] = [];
+  const autoSelectStartTime = Date.now();
+  
+  for (const link of links) {
+    // If we're only looking for auto-select and time is running out, stop
+    if (findAutoSelectOnly && (Date.now() - autoSelectStartTime) > 10000) {
+      break;
+    }
+    
+    const isValid = await validateStreamLink(link, 6000);
+    results.push({ link, isValid, loadTime: 0 });
+    
+    // If we found a valid auto-select stream, continue validating remaining high-priority ones
+    if (findAutoSelectOnly && isValid && link.autoSelect) {
+      // Continue to find other valid auto-select options for comparison
+    }
+  }
+  
+  return results;
+}
+
+/**
+ * Get best stream index based on priority, reliability, and validation
+ * Prefers autoSelect streams with highest priority/reliability
+ */
+export function getBestStreamIndex(links: StreamLink[], validatedLinks: StreamValidationResult[] = []): number {
+  // If we have validation results, use them
+  if (validatedLinks.length > 0) {
+    const validStreams = validatedLinks
+      .filter(r => r.isValid)
+      .map(r => ({
+        index: links.findIndex(l => l === r.link),
+        priority: r.link.priority || 999,
+        reliability: r.link.reliability || 0,
+        autoSelect: r.link.autoSelect || false,
+      }));
+    
+    if (validStreams.length > 0) {
+      // Sort: autoSelect first, then by priority, then by reliability
+      validStreams.sort((a, b) => {
+        if (a.autoSelect && !b.autoSelect) return -1;
+        if (!a.autoSelect && b.autoSelect) return 1;
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return b.reliability - a.reliability;
+      });
+      
+      return validStreams[0].index;
+    }
+  }
+  
+  // No validation - fall back to priority-based selection
+  const autoSelectLinks = links.filter(l => l.autoSelect);
+  const candidates = autoSelectLinks.length > 0 ? autoSelectLinks : links;
+  
+  // Sort by priority (lower = better), then reliability
+  candidates.sort((a, b) => {
+    const aPriority = a.priority || 999;
+    const bPriority = b.priority || 999;
+    if (aPriority !== bPriority) return aPriority - bPriority;
+    const aReliability = a.reliability || 0;
+    const bReliability = b.reliability || 0;
+    return bReliability - aReliability;
+  });
+  
+  return links.findIndex(l => l === candidates[0]);
 }
