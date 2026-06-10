@@ -51,6 +51,36 @@ export default function Home() {
     }
   }, [showSearchResults]);
 
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [trendingData, popularMoviesData, topRatedMoviesData, topRatedTVData, nowPlayingData, airingTodayData, onTheAirData] = await Promise.all([
+          getTrending('all', 'week'),
+          getPopular('movie'),
+          getTopRated('movie'),
+          getTopRated('tv'),
+          getNowPlaying(),
+          getAiringToday(),
+          getOnTheAir(),
+        ]);
+
+        setTrending((trendingData as { results?: MediaItem[] })?.results || []);
+        setPopularMovies((popularMoviesData as { results?: MediaItem[] })?.results || []);
+        setTopRatedMovies((topRatedMoviesData as { results?: MediaItem[] })?.results || []);
+        setTopRatedTV((topRatedTVData as { results?: MediaItem[] })?.results || []);
+        setNowPlaying((nowPlayingData as { results?: MediaItem[] })?.results || []);
+        setAiringToday((airingTodayData as { results?: MediaItem[] })?.results || []);
+        // Note: onTheAirData is used for TV shows similar to nowPlaying
+      } catch (error) {
+        console.error('Failed to load home data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
   const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
